@@ -1,0 +1,50 @@
+# ─────────────────────────────────────────────────────
+# .gitignore  —  Root (covers both rag_chatbot & rag_frontend)
+# ─────────────────────────────────────────────────────
+
+# ── Secrets / environment ─────────────────────────────
+.env
+.env.local
+.env.production
+.env.*.local
+
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+*.so
+.venv/
+venv/
+env/
+
+# ── Production persistence files (local only) ─────────
+# These are generated at runtime and must NOT be committed.
+rag_chatbot/sessions.db
+rag_chatbot/sessions.db-shm
+rag_chatbot/sessions.db-wal
+rag_chatbot/bm25_corpus.json
+
+# ── Node / Frontend ───────────────────────────────────
+node_modules/
+rag_frontend/dist/
+rag_frontend/.cache/
+*.local
+
+# ── IDE / OS ──────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ─────────────────────────────────────────────
+*.log
+logs/
