@@ -9,7 +9,7 @@
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
-from ingestion import ingest_document
+from ingest_docs import ingest_document
 import aiofiles
 
 router = APIRouter()

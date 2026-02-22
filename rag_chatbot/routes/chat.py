@@ -1,17 +1,6 @@
 # routes/chat.py
 # ─────────────────────────────────────────────────────
 # POST /api/chat
-#
-# LANGCHAIN INTEGRATION:
-#   - ChatOllama / ChatOpenAI  (based on LLM_PROVIDER in config.py)
-#   - ChatPromptTemplate  replaces manual message-dict building
-#   - LCEL pipe (prompt | llm | parser) replaces manual streaming loop
-#   - astream() replaces iterating over raw API chunks
-#
-# Three routing paths (business logic unchanged):
-#   1. Greeting / small-talk  → direct chat, no RAG
-#   2. Company question, no match → polite refusal (no LLM call)
-#   3. Company question, match found → RAG via LCEL chain
 # ─────────────────────────────────────────────────────
 
 import json
@@ -21,37 +10,25 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-# LANGCHAIN INTEGRATION: replaces manual message dicts
 from langchain_core.prompts import ChatPromptTemplate
-# LANGCHAIN INTEGRATION: parses AIMessage → plain string
 from langchain_core.output_parsers import StrOutputParser
 
 from vectorstore import hybrid_search
 from memory import add_message, get_recent
 from config import (
-    LLM_PROVIDER,
     CHAT_TEMPERATURE,
     OPENAI_API_KEY, OPENAI_CHAT_MODEL,
-    OLLAMA_CHAT_MODEL, OLLAMA_TEMPERATURE,
 )
 
 router = APIRouter()
 
-# LANGCHAIN INTEGRATION: select the correct LLM class based on LLM_PROVIDER
-# Replaces: direct openai.chat.completions.create() or ollama.chat() calls
-if LLM_PROVIDER == "openai":
-    from langchain_openai import ChatOpenAI
-    _llm      = ChatOpenAI(model=OPENAI_CHAT_MODEL, temperature=CHAT_TEMPERATURE,
-                           streaming=True, openai_api_key=OPENAI_API_KEY, max_tokens=512)
-    _llm_warm = ChatOpenAI(model=OPENAI_CHAT_MODEL, temperature=0.7,
-                           streaming=True, openai_api_key=OPENAI_API_KEY, max_tokens=256)
-else:
-    from langchain_ollama import ChatOllama
-    _llm      = ChatOllama(model=OLLAMA_CHAT_MODEL, temperature=CHAT_TEMPERATURE, num_predict=256)
-    _llm_warm = ChatOllama(model=OLLAMA_CHAT_MODEL, temperature=0.7, num_predict=128)
+from langchain_openai import ChatOpenAI
+_llm      = ChatOpenAI(model=OPENAI_CHAT_MODEL, temperature=CHAT_TEMPERATURE,
+                       streaming=True, openai_api_key=OPENAI_API_KEY, max_tokens=512)
+_llm_warm = ChatOpenAI(model=OPENAI_CHAT_MODEL, temperature=0.7,
+                       streaming=True, openai_api_key=OPENAI_API_KEY, max_tokens=256)
 
 _parser = StrOutputParser()
-
 
 # ── General query detector ────────────────────────────
 _GENERAL_PATTERNS = re.compile(
@@ -78,9 +55,7 @@ _GENERAL_PATTERNS = re.compile(
 def is_general_query(text: str) -> bool:
     return bool(_GENERAL_PATTERNS.match(text.strip()))
 
-
 # ── LANGCHAIN INTEGRATION: prompt templates ───────────
-# Replaces: manual {"role": "system"|"user"|"assistant", "content": ...} lists
 
 _GENERAL_PROMPT = ChatPromptTemplate.from_messages([
     ("system",
@@ -106,14 +81,11 @@ _RAG_PROMPT = ChatPromptTemplate.from_messages([
     ("human", "{question}"),
 ])
 
-# LANGCHAIN INTEGRATION: LCEL chains using | pipe operator
-# Replaces: manual streaming loop over API response chunks
 _general_chain = _GENERAL_PROMPT | _llm_warm | _parser
 _rag_chain     = _RAG_PROMPT     | _llm       | _parser
 
 
 def _format_history(session_id: str) -> list:
-    """Convert memory messages to LangChain (role, content) tuples."""
     recent = get_recent(session_id)
     return [
         ("human" if msg["role"] == "user" else "ai", msg["content"])
@@ -122,10 +94,6 @@ def _format_history(session_id: str) -> list:
 
 
 async def _stream_chain(session_id: str, user_message: str, chain, inputs: dict):
-    """
-    LANGCHAIN INTEGRATION: uses chain.astream() for async token streaming.
-    Yields SSE events. Replaces: iterating raw stream chunks.
-    """
     full_answer = ""
     try:
         async for token in chain.astream(inputs):

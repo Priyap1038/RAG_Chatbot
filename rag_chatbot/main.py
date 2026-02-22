@@ -76,6 +76,10 @@ async def startup_event():
 
 
 # ── Health check ──────────────────────────────────────
+# @app.get("/")
+# async def root():
+#     return {"message": "Welcome to the Acme RAG Chatbot API"}
+
 @app.get("/api/health", tags=["ops"])
 async def health():
     """Liveness probe — always returns 200 if the server is up."""

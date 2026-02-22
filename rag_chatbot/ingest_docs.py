@@ -1,27 +1,56 @@
 # ingest_docs.py
 # ─────────────────────────────────────────────────────
 # One-shot script: load docs from the docs/ folder into Pinecone.
-#
-# LANGCHAIN INTEGRATION:
-#   - TextLoader (langchain_community) replaces open() + f.read()
-#   - Supports .txt and .md files
-#
-# Usage:
-#   python ingest_docs.py
 # ─────────────────────────────────────────────────────
 
 import os
+import hashlib
 
-# LANGCHAIN INTEGRATION: TextLoader replaces manual open() + f.read()
-# It returns a list of LangChain Document objects with
-#   .page_content  → the text
-#   .metadata      → {"source": filepath}
 from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from vectorstore import init_pinecone
-from ingestion   import ingest_document
+from vectorstore import init_pinecone, upsert_chunks
+from embeddings import get_embedding
+from config import CHUNK_SIZE, CHUNK_OVERLAP
 
-DOCS_DIR = os.path.join(os.path.dirname(__file__), "docs")
+DOCS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
+
+_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=CHUNK_SIZE,
+    chunk_overlap=CHUNK_OVERLAP,
+    length_function=len,
+    add_start_index=True,
+)
+
+
+def ingest_document(text: str, filename: str) -> int:
+    """
+    Full pipeline: chunk → embed → upsert to Pinecone.
+    """
+    print(f"[Ingest] Processing '{filename}' …")
+
+    chunks = _splitter.split_text(text)
+    print(f"[Ingest] Split into {len(chunks)} chunk(s) "
+          f"(chunk_size={CHUNK_SIZE}, overlap={CHUNK_OVERLAP})")
+
+    vectors = []
+    for i, chunk in enumerate(chunks):
+        vector = get_embedding(chunk)
+        chunk_id = hashlib.md5(f"{filename}_{i}".encode()).hexdigest()
+
+        vectors.append({
+            "id": chunk_id,
+            "values": vector,
+            "metadata": {
+                "source": filename,
+                "chunk_index": i,
+                "text": chunk,
+            },
+        })
+
+    upsert_chunks(vectors)
+    print(f"[Ingest] Done — {len(vectors)} chunk(s) uploaded for '{filename}'")
+    return len(vectors)
 
 
 def main():
@@ -31,7 +60,6 @@ def main():
 
     init_pinecone()
 
-    # Find all .md and .txt files
     doc_files = [
         f for f in os.listdir(DOCS_DIR)
         if f.endswith((".md", ".txt"))
@@ -44,13 +72,9 @@ def main():
     total_chunks = 0
     for filename in doc_files:
         filepath = os.path.join(DOCS_DIR, filename)
-
-        # LANGCHAIN INTEGRATION: TextLoader replaces open(filepath).read()
-        # autodetect_encoding=True handles different file encodings gracefully
+        
         loader = TextLoader(filepath, autodetect_encoding=True)
-        docs   = loader.load()          # returns List[Document]
-
-        # Each file loads as a single Document; use its page_content
+        docs   = loader.load()
         text = docs[0].page_content
 
         print(f"\n→ Ingesting '{filename}' ({len(text.split())} words) …")

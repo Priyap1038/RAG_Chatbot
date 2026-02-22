@@ -81,25 +81,30 @@ def init_pinecone() -> None:
     """
     global _index, _vectorstore
 
-    if not _pc.has_index(PINECONE_INDEX_NAME):
-        _pc.create_index(
-            name=PINECONE_INDEX_NAME,
-            dimension=EMBEDDING_DIMENSION,
-            metric="cosine",
-            spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+    try:
+        existing_indexes = [i["name"] for i in _pc.list_indexes()]
+        if PINECONE_INDEX_NAME not in existing_indexes:
+            _pc.create_index(
+                name=PINECONE_INDEX_NAME,
+                dimension=EMBEDDING_DIMENSION,
+                metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+            )
+            logger.info("[Pinecone] Created index '%s'", PINECONE_INDEX_NAME)
+        else:
+            logger.info("[Pinecone] Using existing index '%s'", PINECONE_INDEX_NAME)
+
+        _index = _pc.Index(PINECONE_INDEX_NAME)
+
+        from embeddings import get_embedder
+        _vectorstore = PineconeVectorStore(
+            index=_index,
+            embedding=get_embedder(),
+            text_key="text",
         )
-        logger.info("[Pinecone] Created index '%s'", PINECONE_INDEX_NAME)
-    else:
-        logger.info("[Pinecone] Using existing index '%s'", PINECONE_INDEX_NAME)
-
-    _index = _pc.Index(PINECONE_INDEX_NAME)
-
-    from embeddings import get_embedder
-    _vectorstore = PineconeVectorStore(
-        index=_index,
-        embedding=get_embedder(),
-        text_key="text",
-    )
+    except Exception as e:
+        logger.error("[Pinecone] Failed to initialize Pinecone: %s", e)
+        logger.error("Check your PINECONE_API_KEY and network connection.")
 
     # Restore BM25 from disk
     _load_corpus()
