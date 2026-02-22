@@ -2,7 +2,7 @@
 
 A production-ready **Retrieval-Augmented Generation (RAG) Chatbot** built with:
 
-- 🐍 **Backend** — FastAPI + LangChain + Pinecone (vector search) + SQLite (chat history)
+- 🐍 **Backend** — FastAPI + LangChain + Pinecone (vector search) + SQLite (chat history) + OpenAI
 - ⚛️ **Frontend** — React 19 + Vite + Tailwind CSS
 
 ---
@@ -13,14 +13,14 @@ A production-ready **Retrieval-Augmented Generation (RAG) Chatbot** built with:
 RAG_Chatbot/
 ├── rag_chatbot/          # Python FastAPI backend
 │   ├── routes/           # API route handlers (chat, history, session, ingest)
-│   ├── middleware/        # Auth middleware
+│   ├── middleware/       # Auth middleware
 │   ├── docs/             # Source documents for RAG ingestion
 │   ├── main.py           # FastAPI app entry point
 │   ├── config.py         # Configuration (reads .env)
-│   ├── vectorstore.py    # Pinecone vector store logic
-│   ├── embeddings.py     # Embedding model setup
+│   ├── vectorstore.py    # Pinecone vector store logic + local BM25 fallback
+│   ├── embeddings.py     # OpenAI embedding setup
 │   ├── memory.py         # SQLite chat session management
-│   ├── ingestion.py      # Document ingestion pipeline
+│   ├── ingest_docs.py    # One-shot script to load docs into Pinecone
 │   ├── requirements.txt  # Python dependencies
 │   └── .env.example      # Backend env template
 │
@@ -51,7 +51,7 @@ Make sure you have the following installed:
 
 You will also need accounts / API keys for:
 - **Pinecone** — [pinecone.io](https://pinecone.io) (free tier works)
-- **OpenAI** (optional) — [platform.openai.com](https://platform.openai.com) *(or use Ollama locally)*
+- **OpenAI** — [platform.openai.com](https://platform.openai.com) (needs an API Key with credits)
 
 ---
 
@@ -99,7 +99,7 @@ cp .env.example .env          # macOS / Linux
 Now open `.env` and fill in your values:
 
 ```env
-OPENAI_API_KEY=sk-...                   # Your OpenAI API key (if using OpenAI)
+OPENAI_API_KEY=sk-...                   # Your OpenAI API key
 PINECONE_API_KEY=pcsk_...              # Your Pinecone API key
 PINECONE_INDEX_NAME=priya-rag-index    # Your Pinecone index name
 CORS_ORIGINS=*                         # Use * for local dev
@@ -107,16 +107,20 @@ RATE_LIMIT=30/minute
 LOG_LEVEL=INFO
 ```
 
-#### d) Ingest documents into Pinecone
+#### d) Create Pinecone Index
 
-> This step uploads your documents in `docs/` into the Pinecone vector store.
-> Run this **once** before starting the server (or whenever you add new docs).
+> ⚠️ **CRITICAL**: Create your index in Pinecone with **Dimensions = 1536** and **Metric = cosine**. This matches the default OpenAI `text-embedding-3-small` model output.
+
+#### e) Ingest documents into Pinecone
+
+> This step uploads your documents in `docs/` into the Pinecone vector store and builds the local BM25 search corpus (`bm25_corpus.json`).
+> Run this **once** before starting the server (or whenever you physically add new files to `docs/`). The local search state survives restarts!
 
 ```bash
 python ingest_docs.py
 ```
 
-#### e) Start the backend server
+#### f) Start the backend server
 
 ```bash
 uvicorn main:app --reload --port 8000
@@ -230,10 +234,11 @@ API_KEY=your-strong-secret-key
 | Problem | Fix |
 |---------|-----|
 | `ModuleNotFoundError` | Make sure your venv is activated and `pip install -r requirements.txt` was run |
-| Pinecone connection error | Double-check `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` in `.env` |
+| Pinecone `Dimension mismatch` error | Delete the index and recreate it with **dimension = 1536** |
+| OpenAI `401 / Quota Exceeded` | Check your OpenAI billing page to ensure your key has credits |
+| Empty responses / no context | Run `python ingest_docs.py` to populate Pinecone and the local database |
 | CORS errors in browser | Ensure `CORS_ORIGINS=*` is set in backend `.env` during development |
 | Frontend can't reach backend | Make sure backend is running on port `8000` and frontend on `5173` |
-| Port already in use | Use `--port 8001` flag: `uvicorn main:app --reload --port 8001` |
 
 ---
 
