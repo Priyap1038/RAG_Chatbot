@@ -1,0 +1,32 @@
+HOW TO RUN THE RAG CHATBOT PROJECT
+==================================
+
+You need to run BOTH the backend (FastAPI) and the frontend (Vite/React) simultaneously.
+
+---
+
+1. RUN THE BACKEND (SERVER)
+---------------------------
+Open a terminal and run the following commands:
+
+cd rag_chatbot
+venv\Scripts\activate
+uvicorn main:app --reload --port 8000
+
+(If you ever add new documents to the rag_chatbot/docs/ folder, run `python ingest_docs.py` before starting the server).
+
+---
+
+2. RUN THE FRONTEND (UI)
+------------------------
+Open a SECOND terminal and run the following commands:
+
+cd rag_frontend
+npm run dev
+
+---
+
+3. OPEN THE APP
+---------------
+Once both are running, open your web browser and go to:
+http://localhost:5173
