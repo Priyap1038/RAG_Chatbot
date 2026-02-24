@@ -17,16 +17,16 @@ from vectorstore import hybrid_search
 from memory import add_message, get_recent
 from config import (
     CHAT_TEMPERATURE,
-    OPENAI_API_KEY, OPENAI_CHAT_MODEL,
+    GEMINI_API_KEY, GEMINI_CHAT_MODEL,
 )
 
 router = APIRouter()
 
-from langchain_openai import ChatOpenAI
-_llm      = ChatOpenAI(model=OPENAI_CHAT_MODEL, temperature=CHAT_TEMPERATURE,
-                       streaming=True, openai_api_key=OPENAI_API_KEY, max_tokens=512)
-_llm_warm = ChatOpenAI(model=OPENAI_CHAT_MODEL, temperature=0.7,
-                       streaming=True, openai_api_key=OPENAI_API_KEY, max_tokens=256)
+from langchain_google_genai import ChatGoogleGenerativeAI
+_llm      = ChatGoogleGenerativeAI(model=GEMINI_CHAT_MODEL, temperature=CHAT_TEMPERATURE,
+                       google_api_key=GEMINI_API_KEY, max_tokens=512)
+_llm_warm = ChatGoogleGenerativeAI(model=GEMINI_CHAT_MODEL, temperature=0.7,
+                       google_api_key=GEMINI_API_KEY, max_tokens=256)
 
 _parser = StrOutputParser()
 
@@ -101,10 +101,10 @@ async def _stream_chain(session_id: str, user_message: str, chain, inputs: dict)
             yield f"data: {json.dumps({'token': token})}\n\n"
     except Exception as e:
         err = str(e)
-        if "api_key" in err.lower() or "auth" in err.lower() or "401" in err:
+        if "api_key" in err.lower() or "auth" in err.lower() or "401" in err or "403" in err:
             full_answer = (
-                "⚠️ OpenAI API key missing or invalid. "
-                "Add OPENAI_API_KEY to .env and restart the server."
+                "⚠️ Gemini API key missing or invalid. "
+                "Add GEMINI_API_KEY to .env and restart the server."
             )
         else:
             full_answer = f"⚠️ Error: {err[:120]}"

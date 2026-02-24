@@ -5,17 +5,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── OpenAI ────────────────────────────────────────────
-OPENAI_API_KEY: str        = os.getenv("OPENAI_API_KEY", "")
-OPENAI_CHAT_MODEL: str     = "gpt-3.5-turbo"
-OPENAI_EMBED_MODEL: str    = "text-embedding-3-small"
-OPENAI_EMBED_DIM: int      = 1536
-OPENAI_TEMPERATURE: float  = 0.0
+# ── Gemini ────────────────────────────────────────────
+GEMINI_API_KEY: str        = os.getenv("GEMINI_API_KEY", "")
+GEMINI_CHAT_MODEL: str     = "gemini-1.5-flash"
+GEMINI_EMBED_MODEL: str    = "models/embedding-001"
+GEMINI_EMBED_DIM: int      = 768
+GEMINI_TEMPERATURE: float  = 0.0
 
 # ── Active settings ────────────────────────────────────
-EMBEDDING_MODEL     = OPENAI_EMBED_MODEL
-EMBEDDING_DIMENSION = OPENAI_EMBED_DIM
-CHAT_TEMPERATURE    = OPENAI_TEMPERATURE
+EMBEDDING_MODEL     = GEMINI_EMBED_MODEL
+EMBEDDING_DIMENSION = GEMINI_EMBED_DIM
+CHAT_TEMPERATURE    = GEMINI_TEMPERATURE
 
 # ── Pinecone ──────────────────────────────────────────
 PINECONE_API_KEY: str    = os.getenv("PINECONE_API_KEY", "")

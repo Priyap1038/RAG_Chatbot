@@ -1,10 +1,10 @@
 langchain
-langchain-openai
+langchain-google-genai
 langchain-community
 langchain-core
 langchain-pinecone
 langchain-text-splitters
-openai
+google-generativeai
 pinecone
 rank-bm25
 fastapi

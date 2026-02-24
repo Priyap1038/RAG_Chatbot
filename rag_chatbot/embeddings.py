@@ -3,14 +3,14 @@
 # LANGCHAIN INTEGRATION: uses LangChain OpenAIEmbeddings.
 # ─────────────────────────────────────────────────────
 
-from config import EMBEDDING_MODEL, OPENAI_API_KEY
+from config import EMBEDDING_MODEL, GEMINI_API_KEY
 
 _cache: dict[str, list[float]] = {}
 
-from langchain_openai import OpenAIEmbeddings
-_embedder = OpenAIEmbeddings(
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+_embedder = GoogleGenerativeAIEmbeddings(
     model=EMBEDDING_MODEL,
-    openai_api_key=OPENAI_API_KEY,
+    google_api_key=GEMINI_API_KEY,
 )
 
 def get_embedding(text: str) -> list[float]:

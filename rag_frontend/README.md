@@ -94,7 +94,7 @@ VITE_API_URL=https://api.yourapp.com
 - **Session management** — create, switch, and delete chat sessions from the sidebar
 - **Session persistence** — active session and messages restored after page refresh (localStorage)
 - **Document upload** — upload `.md` / `.txt` files directly from the sidebar
-- **Provider-agnostic** — works with Ollama (local) and OpenAI backends via a single config switch
+- **Provider-agnostic** — works with Ollama (local) and Google Gemini backends via a single config switch
 
 ---
 
@@ -104,7 +104,7 @@ No frontend changes needed. Change `LLM_PROVIDER` in `rag_chatbot/config.py`:
 
 ```python
 LLM_PROVIDER = "ollama"   # ← dev / no API key
-LLM_PROVIDER = "openai"   # ← production / with OPENAI_API_KEY
+LLM_PROVIDER = "gemini"   # ← production / with GEMINI_API_KEY
 ```
 
 ---
