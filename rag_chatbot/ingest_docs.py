@@ -25,9 +25,9 @@ _splitter = RecursiveCharacterTextSplitter(
 
 def ingest_document(text: str, filename: str) -> int:
     """
-    Full pipeline: chunk → embed → upsert to Pinecone.
+    Full pipeline: chunk -> embed -> upsert to Pinecone.
     """
-    print(f"[Ingest] Processing '{filename}' …")
+    print(f"[Ingest] Processing '{filename}' ...")
 
     chunks = _splitter.split_text(text)
     print(f"[Ingest] Split into {len(chunks)} chunk(s) "
@@ -77,10 +77,10 @@ def main():
         docs   = loader.load()
         text = docs[0].page_content
 
-        print(f"\n→ Ingesting '{filename}' ({len(text.split())} words) …")
+        print(f"\n-> Ingesting '{filename}' ({len(text.split())} words) ...")
         count = ingest_document(text, filename)
         total_chunks += count
-        print(f"  ✓  {count} chunk(s) stored")
+        print(f"  V  {count} chunk(s) stored")
 
     print("\n" + "=" * 50)
     print(f"  Done! {total_chunks} total chunk(s) in Pinecone.")

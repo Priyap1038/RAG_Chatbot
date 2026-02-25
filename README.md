@@ -101,7 +101,7 @@ Now open `.env` and fill in your values:
 ```env
 GEMINI_API_KEY=AIzaSy...                # Your Gemini API key
 PINECONE_API_KEY=pcsk_...              # Your Pinecone API key
-PINECONE_INDEX_NAME=priya-rag-index    # Your Pinecone index name
+PINECONE_INDEX_NAME=acme-chat-gemini-index    # Your Pinecone index name
 CORS_ORIGINS=*                         # Use * for local dev
 RATE_LIMIT=30/minute
 LOG_LEVEL=INFO
@@ -109,7 +109,7 @@ LOG_LEVEL=INFO
 
 #### d) Create Pinecone Index
 
-> ⚠️ **CRITICAL**: Create your index in Pinecone with **Dimensions = 768** and **Metric = cosine**. This matches the default Gemini `models/embedding-001` model output.
+> ⚠️ **CRITICAL**: Create your index in Pinecone with **Dimensions = 3072** and **Metric = cosine**. This matches the default Gemini `models/gemini-embedding-001` model output.
 
 #### e) Ingest documents into Pinecone
 

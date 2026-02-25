@@ -8,8 +8,8 @@ load_dotenv()
 # ── Gemini ────────────────────────────────────────────
 GEMINI_API_KEY: str        = os.getenv("GEMINI_API_KEY", "")
 GEMINI_CHAT_MODEL: str     = "gemini-1.5-flash"
-GEMINI_EMBED_MODEL: str    = "models/embedding-001"
-GEMINI_EMBED_DIM: int      = 768
+GEMINI_EMBED_MODEL: str    = "models/gemini-embedding-001"
+GEMINI_EMBED_DIM: int      = 3072
 GEMINI_TEMPERATURE: float  = 0.0
 
 # ── Active settings ────────────────────────────────────
